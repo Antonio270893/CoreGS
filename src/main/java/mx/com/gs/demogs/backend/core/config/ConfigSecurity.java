@@ -25,7 +25,7 @@ import mx.com.gs.demogs.backend.core.filter.JwtReqFilter;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class ConfigSecurity {
-
+	// Prueba de pipeline Jenkins
 	@Bean
 	public UserDetailsService userDetailsService(DataSource dataSource) {
 
