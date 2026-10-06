@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <property
+        name="LOG_PATH"
+        value="${logging.file.path:-logs}"
+    />
+
+    <property
+        name="LOG_FILE"
+        value="${logging.file.name:-${LOG_PATH}/coregs.log}"
+    />
+
+    <property
+        name="MAX_HISTORY"
+        value="${logging.log.max-history:-30}"
+    />
+
+    <property
+        name="MAX_FILE_SIZE"
+        value="${logging.log.max-file-size:-50MB}"
+    />
+
+    <property
+        name="TOTAL_SIZE_CAP"
+        value="${logging.log.total-size-cap:-2GB}"
+    />
+
+    <property
+        name="LOG_PATTERN"
+        value="[#%d{yyyy-MM-dd HH:mm:ss}; APLICACION:CoreGS; CATEGORIA:%-5level; MENSAJE:%msg; METODO:%M; CLASE:%c; LINEA:%L #]%n"
+    />
+
+    <appender
+        name="CONSOLE"
+        class="ch.qos.logback.core.ConsoleAppender">
+
+        <encoder>
+            <pattern>[#%d{yyyy-MM-dd HH:mm:ss}; %yellow(APLICACION:CoreGS); %highlight(CATEGORIA:%-5level); %white(MENSAJE:%msg); %cyan(METODO:%M); %yellow(CLASE:%c); %green(LINEA:%L) %cyan(#)]%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+    </appender>
+
+    <appender
+        name="FILE"
+        class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <file>${LOG_FILE}</file>
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <rollingPolicy
+            class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+
+            <fileNamePattern>
+                ${LOG_PATH}/coregs.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+
+        </rollingPolicy>
+
+    </appender>
+
+    <logger
+        name="mx.com.gs.demogs.backend"
+        level="INFO"
+        additivity="false">
+
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+
+    </logger>
+
+    <logger
+        name="BD"
+        level="INFO"
+        additivity="false">
+
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+
+    </logger>
+
+    <logger
+        name="org.springframework.security"
+        level="WARN"
+    />
+
+    <logger
+        name="org.hibernate.SQL"
+        level="DEBUG"
+    />
+
+    <root level="INFO">
+
+        <appender-ref ref="CONSOLE" />
+
+    </root>
+
+</configuration>
