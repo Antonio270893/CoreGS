@@ -16,13 +16,25 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh '''
-                    docker run --rm \
-                      -v jenkins_home:/jenkins_home \
-                      -w /jenkins_home/workspace/CoreGS-Pipeline \
-                      coregs-build:java23 \
-                      ./mvnw test
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'coregs-db',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        docker run --rm \
+                          -v jenkins_home:/jenkins_home \
+                          -w /jenkins_home/workspace/CoreGS-Pipeline \
+                          -e SPRING_DATASOURCE_URL="jdbc:mysql://docker-mysql:3306/coregs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
+                          -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
+                          -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
+                          --network devops-net \
+                          coregs-build:java23 \
+                          ./mvnw test
+                    '''
+                }
             }
         }
     }
