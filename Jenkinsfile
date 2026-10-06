@@ -2,21 +2,27 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo 'Código obtenido desde GitHub'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo 'Aquí ejecutaremos Maven'
+                sh '''
+                    docker run --rm \
+                      -v jenkins_home:/jenkins_home \
+                      -w /jenkins_home/workspace/CoreGS-Pipeline \
+                      coregs-build:java23 \
+                      ./mvnw clean package -DskipTests
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Aquí ejecutaremos las pruebas'
+                sh '''
+                    docker run --rm \
+                      -v jenkins_home:/jenkins_home \
+                      -w /jenkins_home/workspace/CoreGS-Pipeline \
+                      coregs-build:java23 \
+                      ./mvnw test
+                '''
             }
         }
     }
