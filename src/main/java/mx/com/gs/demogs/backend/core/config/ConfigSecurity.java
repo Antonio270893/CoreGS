@@ -25,12 +25,11 @@ import mx.com.gs.demogs.backend.core.filter.JwtReqFilter;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class ConfigSecurity {
-	// Prueba de pipeline Jenkins
 	@Bean
 	public UserDetailsService userDetailsService(DataSource dataSource) {
 
 		JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
-
+		// Prueba Jenkins
 		manager.setUsersByUsernameQuery("""
 				    SELECT numero_empleado,
 				           contrasenia,
