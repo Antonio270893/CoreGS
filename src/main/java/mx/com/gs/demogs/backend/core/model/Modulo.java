@@ -25,36 +25,39 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Modulo {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
 
-	@Column(nullable = false, length = 100)
-	private String nombre;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@Column(length = 200)
-	private String ruta;
+    @Column(nullable = false, length = 100)
+    private String nombre;
 
-	@Column(length = 100)
-	private String icono;
+    @Column(length = 200)
+    private String ruta;
 
-	@ManyToOne
-	@JoinColumn(name = "modulo_padre_id")
-	private Modulo moduloPadre;
+    @Column(length = 100)
+    private String icono;
 
-	@Column(nullable = false)
-	private Integer orden = 0;
+    @ManyToOne
+    @JoinColumn(name = "modulo_padre_id")
+    private Modulo moduloPadre;
 
-	@Column(nullable = false)
-	private Boolean activo = true;
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer orden = 0;
 
-	@Override
-	public String toString() {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			return mapper.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
-			return "{}";
-		}
-	}
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean activo = true;
+
+    @Override
+    public String toString() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(this);
+        } catch (JsonProcessingException _) {
+            return "{}";
+        }
+    }
 }

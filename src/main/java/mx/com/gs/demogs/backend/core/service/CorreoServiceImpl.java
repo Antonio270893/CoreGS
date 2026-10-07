@@ -23,7 +23,7 @@ import mx.com.gs.demogs.backend.core.request.CorreoRequest;
 public class CorreoServiceImpl implements ICorreoService {
 
     private static final Pattern VARIABLE_PATTERN =
-    		Pattern.compile("\\{\\{\\s*([^{}]+)\\s*\\}\\}");
+            Pattern.compile("\\{\\{\\s*([^{}]++)\\s*\\}\\}");
 
     private final JavaMailSender mailSender;
     private final IPlantillaCorreoDao plantillaCorreoDao;
@@ -89,27 +89,35 @@ public class CorreoServiceImpl implements ICorreoService {
         }
 
         log.info("===== DATOS DEL CORREO =====");
+
         log.info(
                 "Para: {}",
                 request.getPara());
+
         log.info(
                 "CC: {}",
                 request.getCc());
+
         log.info(
                 "CCO: {}",
                 request.getCco());
+
         log.info(
                 "Asunto: {}",
                 asunto);
+
         log.info(
                 "Referencia plantilla: {}",
                 request.getReferenciaPlantilla());
+
         log.info(
                 "Datos: {}",
                 request.getDatos());
+
         log.info(
                 "Contenido: {}",
                 contenido);
+
         log.info("============================");
 
         enviarCorreo(
@@ -147,6 +155,7 @@ public class CorreoServiceImpl implements ICorreoService {
                     request.getCco());
 
             helper.setSubject(asunto);
+
             helper.setText(
                     contenido,
                     true);

@@ -30,6 +30,7 @@ public class JwtService {
         this.expiration = expiration;
     }
 
+    @SuppressWarnings("java:S2143")
     public String generateToken(
             UserDetails userDetails,
             Usuario usuario) {
@@ -80,6 +81,7 @@ public class JwtService {
                 && !isTokenExpired(token);
     }
 
+    @SuppressWarnings("java:S2143")
     private boolean isTokenExpired(String token) {
 
         Date expirationDate = Jwts.parser()
@@ -89,7 +91,8 @@ public class JwtService {
                 .getPayload()
                 .getExpiration();
 
-        return expirationDate.toInstant().isBefore(Instant.now());
+        return expirationDate.toInstant()
+                .isBefore(Instant.now());
     }
 
     public long getExpirationInSeconds() {
@@ -106,6 +109,8 @@ public class JwtService {
                 .getPayload()
                 .get("id");
 
-        return id != null ? id.longValue() : null;
+        return id != null
+                ? id.longValue()
+                : null;
     }
 }
