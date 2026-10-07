@@ -30,7 +30,6 @@ public class JwtService {
         this.expiration = expiration;
     }
 
-    @SuppressWarnings("java:S2143")
     public String generateToken(
             UserDetails userDetails,
             Usuario usuario) {
@@ -81,7 +80,6 @@ public class JwtService {
                 && !isTokenExpired(token);
     }
 
-    @SuppressWarnings("java:S2143")
     private boolean isTokenExpired(String token) {
 
         Date expirationDate = Jwts.parser()
