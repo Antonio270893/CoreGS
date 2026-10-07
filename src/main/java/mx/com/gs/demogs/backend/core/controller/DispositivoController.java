@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import mx.com.gs.demogs.backend.core.dto.DispositivoDto;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.service.IDispositivoService;
@@ -36,7 +35,8 @@ public class DispositivoController {
 	}
 
 	@GetMapping("/{usuarioId}/{deviceId}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(@PathVariable Long usuarioId,
+	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(
+			@PathVariable Long usuarioId,
 			@PathVariable String deviceId) {
 
 		log.info("Consultando dispositivo del usuario: {}", usuarioId);
@@ -45,15 +45,17 @@ public class DispositivoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(@RequestBody DispositivoDto dispositivoDto) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(
+			@RequestBody DispositivoDto dispositivoDto) {
 
 		log.info("Registrando dispositivo para usuario: {}", dispositivoDto.usuarioId());
 
-		return dispositivoService.registrar(dispositivoDto);
+		return dispositivoService.registrar(dispositivoDto, true);
 	}
 
 	@PutMapping("/{usuarioId}/{deviceId}/acceso")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(@PathVariable Long usuarioId,
+	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(
+			@PathVariable Long usuarioId,
 			@PathVariable String deviceId) {
 
 		log.info("Actualizando ultimo acceso del dispositivo del usuario: {}", usuarioId);
@@ -62,7 +64,8 @@ public class DispositivoController {
 	}
 
 	@DeleteMapping("/{usuarioId}/{deviceId}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminarDispositivo(@PathVariable Long usuarioId,
+	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminarDispositivo(
+			@PathVariable Long usuarioId,
 			@PathVariable String deviceId) {
 
 		log.info("Eliminando dispositivo del usuario: {}", usuarioId);

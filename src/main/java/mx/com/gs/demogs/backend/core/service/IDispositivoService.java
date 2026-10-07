@@ -14,7 +14,7 @@ public interface IDispositivoService {
 
 	boolean estaAutorizado(Long usuarioId, String deviceId);
 
-	ResponseEntity<ApiResponse<Map<String, Object>>> registrar(DispositivoDto dispositivoDto);
+	ResponseEntity<ApiResponse<Map<String, Object>>> registrar(DispositivoDto dispositivoDto, boolean activo);
 
 	ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(Long usuarioId, String deviceId);
 

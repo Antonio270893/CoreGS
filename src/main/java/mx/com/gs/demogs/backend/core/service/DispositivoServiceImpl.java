@@ -28,21 +28,28 @@ import mx.com.gs.demogs.backend.util.MensajeUtil;
 @Slf4j
 public class DispositivoServiceImpl implements IDispositivoService {
 
-	private final IDispositivoDao dispositivoDao;
 	private final IActivacionDispositivoDao activacionDispositivoDao;
+	private final IDispositivoDao dispositivoDao;
 	private final IUsuarioDao usuarioDao;
 
 	@Override
 	@Transactional(readOnly = true)
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(Long usuarioId,
+	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(
+			Long usuarioId,
 			String deviceId) {
 
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
 
 		return dispositivoDao.findByUsuarioIdAndDeviceId(usuarioId, deviceId)
-				.map(dispositivo -> response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, List.of(dispositivo)))
-				.orElseGet(() -> response(HttpStatus.NOT_FOUND, MensajeUtil.REGISTRO_NO_ENCONTRADO, null));
+				.map(dispositivo -> response(
+						HttpStatus.OK,
+						MensajeUtil.CONSULTA_EXITOSA,
+						List.of(dispositivo)))
+				.orElseGet(() -> response(
+						HttpStatus.NOT_FOUND,
+						MensajeUtil.REGISTRO_NO_ENCONTRADO,
+						null));
 	}
 
 	@Override
@@ -52,25 +59,34 @@ public class DispositivoServiceImpl implements IDispositivoService {
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
 
-		return dispositivoDao.findByUsuarioIdAndDeviceIdAndActivoTrue(usuarioId, deviceId).isPresent();
+		return dispositivoDao
+				.findByUsuarioIdAndDeviceIdAndActivoTrue(usuarioId, deviceId)
+				.isPresent();
 	}
 
 	@Override
 	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(DispositivoDto dispositivoDto) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(
+			DispositivoDto dispositivoDto,
+			boolean activo) {
 
 		validarDispositivo(dispositivoDto);
 
 		Dispositivo existente = dispositivoDao
-				.findByUsuarioIdAndDeviceId(dispositivoDto.usuarioId(), dispositivoDto.deviceId())
+				.findByUsuarioIdAndDeviceId(
+						dispositivoDto.usuarioId(),
+						dispositivoDto.deviceId())
 				.orElse(null);
 
 		if (existente != null) {
-			throw new IllegalArgumentException("El dispositivo ya se encuentra registrado");
+			throw new IllegalArgumentException(
+					"El dispositivo ya se encuentra registrado");
 		}
 
-		Usuario usuario = usuarioDao.findById(dispositivoDto.usuarioId())
-				.orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+		Usuario usuario = usuarioDao
+				.findById(dispositivoDto.usuarioId())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Usuario no encontrado"));
 
 		Dispositivo dispositivo = new Dispositivo();
 
@@ -80,17 +96,22 @@ public class DispositivoServiceImpl implements IDispositivoService {
 		dispositivo.setTipoDispositivo(dispositivoDto.tipoDispositivo());
 		dispositivo.setSistemaOperativo(dispositivoDto.sistemaOperativo());
 		dispositivo.setNavegador(dispositivoDto.navegador());
-		dispositivo.setActivo(true);
-		dispositivo.setFechaActivacion(LocalDateTime.now());
+		dispositivo.setActivo(activo);
+		dispositivo.setFechaActivacion(
+				activo ? LocalDateTime.now() : null);
 
 		Dispositivo dispositivoGuardado = dispositivoDao.save(dispositivo);
 
-		return response(HttpStatus.CREATED, MensajeUtil.REGISTRO_CREADO, List.of(dispositivoGuardado));
+		return response(
+				HttpStatus.CREATED,
+				MensajeUtil.REGISTRO_CREADO,
+				List.of(dispositivoGuardado));
 	}
 
 	@Override
 	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(Long usuarioId,
+	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(
+			Long usuarioId,
 			String deviceId) {
 
 		validarUsuarioId(usuarioId);
@@ -99,28 +120,39 @@ public class DispositivoServiceImpl implements IDispositivoService {
 		Dispositivo dispositivo = obtenerDispositivo(usuarioId, deviceId);
 
 		if (!Boolean.TRUE.equals(dispositivo.getActivo())) {
-			throw new IllegalArgumentException("El dispositivo no se encuentra autorizado");
+			throw new IllegalArgumentException(
+					"El dispositivo no se encuentra autorizado");
 		}
 
 		dispositivo.setUltimoAcceso(LocalDateTime.now());
 
 		Dispositivo dispositivoActualizado = dispositivoDao.save(dispositivo);
 
-		return response(HttpStatus.OK, MensajeUtil.REGISTRO_ACTUALIZADO, List.of(dispositivoActualizado));
+		return response(
+				HttpStatus.OK,
+				MensajeUtil.REGISTRO_ACTUALIZADO,
+				List.of(dispositivoActualizado));
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Dispositivo obtenerPorUsuarioYDeviceId(Long usuarioId, String deviceId) {
+	public Dispositivo obtenerPorUsuarioYDeviceId(
+			Long usuarioId,
+			String deviceId) {
 
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
 
-		return dispositivoDao.findByUsuarioIdAndDeviceId(usuarioId, deviceId).orElse(null);
+		return dispositivoDao
+				.findByUsuarioIdAndDeviceId(usuarioId, deviceId)
+				.orElse(null);
 	}
 
 	@Transactional(readOnly = true)
-	public boolean fingerprintCoincide(Long usuarioId, String deviceId, String deviceFingerprint) {
+	public boolean fingerprintCoincide(
+			Long usuarioId,
+			String deviceId,
+			String deviceFingerprint) {
 
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
@@ -145,30 +177,37 @@ public class DispositivoServiceImpl implements IDispositivoService {
 		return dispositivo.getDeviceFingerprint().equals(deviceFingerprint);
 	}
 
-	private Dispositivo obtenerDispositivo(Long usuarioId, String deviceId) {
+	private Dispositivo obtenerDispositivo(
+			Long usuarioId,
+			String deviceId) {
 
-		return dispositivoDao.findByUsuarioIdAndDeviceId(usuarioId, deviceId)
-				.orElseThrow(() -> new ResourceNotFoundException(MensajeUtil.REGISTRO_NO_ENCONTRADO));
+		return dispositivoDao
+				.findByUsuarioIdAndDeviceId(usuarioId, deviceId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						MensajeUtil.REGISTRO_NO_ENCONTRADO));
 	}
 
 	private void validarUsuarioId(Long usuarioId) {
 
 		if (usuarioId == null || usuarioId <= 0) {
-			throw new IllegalArgumentException("El id del usuario es obligatorio");
+			throw new IllegalArgumentException(
+					"El id del usuario es obligatorio");
 		}
 	}
 
 	private void validarDeviceId(String deviceId) {
 
 		if (deviceId == null || deviceId.isBlank()) {
-			throw new IllegalArgumentException("El deviceId es obligatorio");
+			throw new IllegalArgumentException(
+					"El deviceId es obligatorio");
 		}
 	}
 
 	private void validarDispositivo(DispositivoDto dispositivoDto) {
 
 		if (dispositivoDto == null) {
-			throw new IllegalArgumentException("Los datos del dispositivo son obligatorios");
+			throw new IllegalArgumentException(
+					"Los datos del dispositivo son obligatorios");
 		}
 
 		validarUsuarioId(dispositivoDto.usuarioId());
@@ -176,22 +215,26 @@ public class DispositivoServiceImpl implements IDispositivoService {
 
 		if (dispositivoDto.deviceFingerprint() == null
 				|| dispositivoDto.deviceFingerprint().isBlank()) {
-			throw new IllegalArgumentException("La huella del dispositivo es obligatoria");
+			throw new IllegalArgumentException(
+					"La huella del dispositivo es obligatoria");
 		}
 
 		if (dispositivoDto.tipoDispositivo() == null
 				|| dispositivoDto.tipoDispositivo().isBlank()) {
-			throw new IllegalArgumentException("El tipo de dispositivo es obligatorio");
+			throw new IllegalArgumentException(
+					"El tipo de dispositivo es obligatorio");
 		}
 
 		if (dispositivoDto.sistemaOperativo() == null
 				|| dispositivoDto.sistemaOperativo().isBlank()) {
-			throw new IllegalArgumentException("El sistema operativo es obligatorio");
+			throw new IllegalArgumentException(
+					"El sistema operativo es obligatorio");
 		}
 
 		if (dispositivoDto.navegador() == null
 				|| dispositivoDto.navegador().isBlank()) {
-			throw new IllegalArgumentException("El navegador es obligatorio");
+			throw new IllegalArgumentException(
+					"El navegador es obligatorio");
 		}
 	}
 
@@ -200,7 +243,9 @@ public class DispositivoServiceImpl implements IDispositivoService {
 			String mensaje,
 			List<Dispositivo> dispositivos) {
 
-		return ResponseEntity.status(status).body(crearResponse(status, mensaje, dispositivos));
+		return ResponseEntity
+				.status(status)
+				.body(crearResponse(status, mensaje, dispositivos));
 	}
 
 	private ApiResponse<Map<String, Object>> crearResponse(
@@ -224,14 +269,18 @@ public class DispositivoServiceImpl implements IDispositivoService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuario(Long usuarioId) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuario(
+			Long usuarioId) {
 
 		validarUsuarioId(usuarioId);
 
 		List<Dispositivo> dispositivos = dispositivoDao
 				.findByUsuarioIdOrderByUltimoAccesoDesc(usuarioId);
 
-		return response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, dispositivos);
+		return response(
+				HttpStatus.OK,
+				MensajeUtil.CONSULTA_EXITOSA,
+				dispositivos);
 	}
 
 	@Override
