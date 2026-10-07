@@ -38,7 +38,7 @@ public class TokenController {
 	private final IDispositivoService dispositivoService;
 
 	@PostMapping("/authenticate")
-	public ResponseEntity<?> authenticate(@RequestBody AuthRequest request) {
+	public ResponseEntity<Object> authenticate(@RequestBody AuthRequest request) {
 
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(

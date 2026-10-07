@@ -13,13 +13,6 @@ public interface IRolModuloDao extends CrudRepository<RolModulo, RolModuloId> {
 
 	List<RolModulo> findByRolId(Long rolId);
 
-	@Query("""
-			SELECT rm
-			FROM RolModulo rm
-			INNER JOIN Modulo m
-				ON m.id = rm.moduloId
-			WHERE rm.rolId IN :rolIds
-			  AND m.activo = TRUE
-			""")
+	@Query("SELECT rm FROM RolModulo rm INNER JOIN Modulo m ON m.id = rm.moduloId WHERE rm.rolId IN :rolIds AND m.activo = TRUE")
 	List<RolModulo> obtenerModulosPorRoles(@Param("rolIds") List<Long> rolIds);
 }

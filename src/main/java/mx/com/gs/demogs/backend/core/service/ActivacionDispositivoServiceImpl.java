@@ -3,6 +3,7 @@ package mx.com.gs.demogs.backend.core.service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,7 +36,7 @@ import mx.com.gs.demogs.backend.util.MensajeUtil;
 public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoService {
 
 	private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter
-	        .ofPattern("dd 'de' MMMM 'de' yyyy 'a las' HH:mm", Locale.forLanguageTag("es-MX"));
+			.ofPattern("dd 'de' MMMM 'de' yyyy 'a las' HH:mm", Locale.forLanguageTag("es-MX"));
 
 	@Value("${dispositivo.activacion.expiracion-minutos}")
 	private int minutosExpiracion;
@@ -48,6 +49,8 @@ public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoS
 	private final IDispositivoDao dispositivoDao;
 
 	private final ICorreoService correoService;
+	
+	private final SecureRandom secureRandom = new SecureRandom();
 
 	@Override
 	@Transactional
@@ -95,7 +98,7 @@ public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoS
 			throw new IllegalArgumentException("El usuario del dispositivo no tiene un correo registrado");
 		}
 
-		LocalDateTime ahora = LocalDateTime.now();
+		LocalDateTime ahora = LocalDateTime.now(ZoneId.of("America/Mexico_City"));
 
 		Iterable<ActivacionDispositivo> activaciones = activacionDispositivoDao.findAll();
 
@@ -205,7 +208,7 @@ public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoS
 
 	private void activarDispositivo(ActivacionDispositivo activacion) {
 
-		LocalDateTime ahora = LocalDateTime.now();
+		LocalDateTime ahora = LocalDateTime.now(ZoneId.of("America/Mexico_City"));
 
 		Dispositivo dispositivo = activacion.getDispositivo();
 
@@ -226,7 +229,8 @@ public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoS
 
 	private void validarExpiracion(ActivacionDispositivo activacion) {
 
-		if (activacion.getFechaExpiracion() == null || activacion.getFechaExpiracion().isBefore(LocalDateTime.now())) {
+		if (activacion.getFechaExpiracion() == null
+				|| activacion.getFechaExpiracion().isBefore(LocalDateTime.now(ZoneId.of("America/Mexico_City")))) {
 
 			throw new IllegalArgumentException("El token de activación ha expirado");
 		}
@@ -246,11 +250,10 @@ public class ActivacionDispositivoServiceImpl implements IActivacionDispositivoS
 		}
 	}
 
+
+
 	private String generarCodigo() {
-
-		SecureRandom random = new SecureRandom();
-
-		return String.format("%06d", random.nextInt(1_000_000));
+		return String.format("%06d", secureRandom.nextInt(1_000_000));
 	}
 
 	private ResponseEntity<ApiResponse<Map<String, Object>>> response(HttpStatus status, String mensaje,

@@ -2,6 +2,7 @@
 package mx.com.gs.demogs.backend.core.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,7 +59,7 @@ public class AuditoriaServiceImpl implements IAuditoriaService {
 		Auditoria auditoria = new Auditoria();
 
 		auditoria.setUsuario(usuario);
-		auditoria.setFecha(LocalDateTime.now());
+		auditoria.setFecha(LocalDateTime.now(ZoneId.of("America/Mexico_City")));
 		auditoria.setAccion(accion);
 		auditoria.setTabla(tabla);
 		auditoria.setRegistroId(registroId);

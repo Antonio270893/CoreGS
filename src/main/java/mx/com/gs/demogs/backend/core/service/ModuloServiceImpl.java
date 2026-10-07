@@ -1,4 +1,3 @@
-
 package mx.com.gs.demogs.backend.core.service;
 
 import java.util.ArrayList;
@@ -25,6 +24,8 @@ import mx.com.gs.demogs.backend.util.MensajeUtil;
 @RequiredArgsConstructor
 @Slf4j
 public class ModuloServiceImpl implements IModuloService {
+
+	private static final String ENTIDAD_MODULO = "modulo";
 
 	private final IModuloDao moduloDao;
 	private final IAuditoriaService auditoriaService;
@@ -62,7 +63,12 @@ public class ModuloServiceImpl implements IModuloService {
 
 		Modulo moduloGuardado = moduloDao.save(modulo);
 
-		auditoriaService.registrar("CREATE", "modulo", moduloGuardado.getId(), null, moduloGuardado.toString());
+		auditoriaService.registrar(
+				"CREATE",
+				ENTIDAD_MODULO,
+				moduloGuardado.getId(),
+				null,
+				moduloGuardado.toString());
 
 		return response(HttpStatus.CREATED, MensajeUtil.REGISTRO_CREADO, List.of(moduloGuardado));
 	}
@@ -88,7 +94,12 @@ public class ModuloServiceImpl implements IModuloService {
 
 		Modulo moduloActualizado = moduloDao.save(moduloExistente);
 
-		auditoriaService.registrar("UPDATE", "modulo", id, datosAnteriores, moduloActualizado.toString());
+		auditoriaService.registrar(
+				"UPDATE",
+				ENTIDAD_MODULO,
+				id,
+				datosAnteriores,
+				moduloActualizado.toString());
 
 		return response(HttpStatus.OK, MensajeUtil.REGISTRO_ACTUALIZADO, List.of(moduloActualizado));
 	}
@@ -107,7 +118,12 @@ public class ModuloServiceImpl implements IModuloService {
 
 		Modulo moduloActualizado = moduloDao.save(modulo);
 
-		auditoriaService.registrar("DEACTIVATE", "modulo", id, datosAnteriores, moduloActualizado.toString());
+		auditoriaService.registrar(
+				"DEACTIVATE",
+				ENTIDAD_MODULO,
+				id,
+				datosAnteriores,
+				moduloActualizado.toString());
 
 		return response(HttpStatus.OK, MensajeUtil.REGISTRO_ELIMINADO, null);
 	}
@@ -172,12 +188,10 @@ public class ModuloServiceImpl implements IModuloService {
 		}
 
 		if (modulo.getNombre() == null || modulo.getNombre().isBlank()) {
-
 			throw new IllegalArgumentException("El nombre del modulo es obligatorio");
 		}
 
 		if (modulo.getOrden() == null || modulo.getOrden() < 0) {
-
 			throw new IllegalArgumentException("El orden del modulo es obligatorio");
 		}
 
@@ -186,16 +200,23 @@ public class ModuloServiceImpl implements IModuloService {
 		}
 	}
 
-	private ResponseEntity<ApiResponse<Map<String, Object>>> response(HttpStatus status, String mensaje,
+	private ResponseEntity<ApiResponse<Map<String, Object>>> response(
+			HttpStatus status,
+			String mensaje,
 			List<Modulo> modulos) {
 
 		return ResponseEntity.status(status).body(crearResponse(status, mensaje, modulos));
 	}
 
-	private ApiResponse<Map<String, Object>> crearResponse(HttpStatus status, String mensaje, List<Modulo> modulos) {
+	private ApiResponse<Map<String, Object>> crearResponse(
+			HttpStatus status,
+			String mensaje,
+			List<Modulo> modulos) {
 
-		MetadataResponse metadata = new MetadataResponse(status.is2xxSuccessful() ? "SUCCESS" : "ERROR",
-				String.valueOf(status.value()), mensaje);
+		MetadataResponse metadata = new MetadataResponse(
+				status.is2xxSuccessful() ? "SUCCESS" : "ERROR",
+				String.valueOf(status.value()),
+				mensaje);
 
 		Map<String, Object> data = new LinkedHashMap<>();
 
