@@ -25,113 +25,111 @@ import mx.com.gs.demogs.backend.core.filter.JwtReqFilter;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class ConfigSecurity {
-	@Bean
-	public UserDetailsService userDetailsService(DataSource dataSource) {
 
-		JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
-		// Prueba Jenkins
-		manager.setUsersByUsernameQuery("""
-				    SELECT numero_empleado,
-				           contrasenia,
-				           activo
-				    FROM usuario
-				    WHERE numero_empleado = ?
-				""");
+    @Bean
+    public UserDetailsService userDetailsService(DataSource dataSource) {
 
-		manager.setAuthoritiesByUsernameQuery("""
-				    SELECT u.numero_empleado,
-				           CONCAT('ROLE_', r.nombre)
-				    FROM usuario u
-				    INNER JOIN usuario_rol ur
-				        ON ur.usuario_id = u.id
-				    INNER JOIN rol r
-				        ON r.id = ur.rol_id
-				    WHERE u.numero_empleado = ?
-				      AND r.activo = TRUE
-				""");
+        JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
 
-		return manager;
-	}
+        manager.setUsersByUsernameQuery("""
+                    SELECT numero_empleado,
+                           contrasenia,
+                           activo
+                    FROM usuario
+                    WHERE numero_empleado = ?
+                """);
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+        manager.setAuthoritiesByUsernameQuery("""
+                    SELECT u.numero_empleado,
+                           CONCAT('ROLE_', r.nombre)
+                    FROM usuario u
+                    INNER JOIN usuario_rol ur
+                        ON ur.usuario_id = u.id
+                    INNER JOIN rol r
+                        ON r.id = ur.rol_id
+                    WHERE u.numero_empleado = ?
+                      AND r.activo = TRUE
+                """);
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return manager;
+    }
 
-		return configuration.getAuthenticationManager();
-	}
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http, JwtReqFilter jwtReqFilter,
-			DbAuthorizationManager dbAuthorizationManager) throws Exception {
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration) {
 
-		http.cors(Customizer.withDefaults())
+        try {
+            return configuration.getAuthenticationManager();
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "No se pudo configurar el AuthenticationManager", e);
+        }
+    }
 
-				.csrf(csrf -> csrf.disable())
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            JwtReqFilter jwtReqFilter,
+            DbAuthorizationManager dbAuthorizationManager) {
 
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        try {
+            http
+                    .cors(Customizer.withDefaults())
+                    .csrf(csrf -> csrf.disable())
+                    .sessionManagement(session -> session
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .exceptionHandling(exceptions -> exceptions
+                            .authenticationEntryPoint((request, response, exception) -> {
+                                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                                response.setContentType("application/json");
+                                response.setCharacterEncoding("UTF-8");
+                                response.getWriter().write("""
+                                            {
+                                                "status": 401,
+                                                "error": "Unauthorized",
+                                                "message": "No autenticado"
+                                            }
+                                        """);
+                            })
+                            .accessDeniedHandler((request, response, exception) -> {
+                                response.setStatus(HttpStatus.FORBIDDEN.value());
+                                response.setContentType("application/json");
+                                response.setCharacterEncoding("UTF-8");
+                                response.getWriter().write("""
+                                            {
+                                                "status": 403,
+                                                "error": "Forbidden",
+                                                "message": "No tiene permisos para realizar esta operación"
+                                            }
+                                        """);
+                            }))
+                    .authorizeHttpRequests(configure -> configure
+                            .requestMatchers("/v1/core/authenticate").permitAll()
+                            .requestMatchers("/v1/core/auth/refresh").permitAll()
+                            .requestMatchers("/v1/core/auth/logout").permitAll()
+                            .requestMatchers("/v1/core/correo/enviar").permitAll()
+                            .requestMatchers("/v1/core/dispositivo/activacion/**").permitAll()
+                            .requestMatchers("/v1/core/dispositivo/**").authenticated()
+                            .requestMatchers(
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html")
+                            .permitAll()
+                            .anyRequest().access(dbAuthorizationManager))
+                    .addFilterBefore(
+                            jwtReqFilter,
+                            UsernamePasswordAuthenticationFilter.class);
 
-				.exceptionHandling(exceptions -> exceptions
+            return http.build();
 
-						.authenticationEntryPoint((request, response, exception) -> {
-
-							response.setStatus(HttpStatus.UNAUTHORIZED.value());
-
-							response.setContentType("application/json");
-
-							response.setCharacterEncoding("UTF-8");
-
-							response.getWriter().write("""
-									    {
-									        "status": 401,
-									        "error": "Unauthorized",
-									        "message": "No autenticado"
-									    }
-									""");
-						})
-
-						.accessDeniedHandler((request, response, exception) -> {
-
-							response.setStatus(HttpStatus.FORBIDDEN.value());
-
-							response.setContentType("application/json");
-
-							response.setCharacterEncoding("UTF-8");
-
-							response.getWriter().write("""
-									    {
-									        "status": 403,
-									        "error": "Forbidden",
-									        "message": "No tiene permisos para realizar esta operación"
-									    }
-									""");
-						}))
-
-				.authorizeHttpRequests(configure -> configure
-
-						.requestMatchers("/v1/core/authenticate").permitAll()
-
-						.requestMatchers("/v1/core/auth/refresh").permitAll()
-
-						.requestMatchers("/v1/core/auth/logout").permitAll()
-
-						.requestMatchers("/v1/core/correo/enviar").permitAll()
-						
-						.requestMatchers("/v1/core/dispositivo/activacion/**").permitAll()
-
-						.requestMatchers("/v1/core/authenticate")
-
-						.permitAll().requestMatchers("/v1/core/dispositivo/**").authenticated()
-
-						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
-						.anyRequest().access(dbAuthorizationManager))
-
-				.addFilterBefore(jwtReqFilter, UsernamePasswordAuthenticationFilter.class);
-
-		return http.build();
-	}
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "No se pudo configurar la cadena de seguridad", e);
+        }
+    }
 }

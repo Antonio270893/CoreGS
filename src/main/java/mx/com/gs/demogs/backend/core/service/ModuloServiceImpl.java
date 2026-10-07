@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import mx.com.gs.demogs.backend.core.dao.IModuloDao;
+import mx.com.gs.demogs.backend.core.dto.ModuloDto;
 import mx.com.gs.demogs.backend.core.model.Modulo;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.response.MetadataResponse;
@@ -25,205 +25,256 @@ import mx.com.gs.demogs.backend.util.MensajeUtil;
 @Slf4j
 public class ModuloServiceImpl implements IModuloService {
 
-	private static final String ENTIDAD_MODULO = "modulo";
+    private static final String ENTIDAD_MODULO = "modulo";
 
-	private final IModuloDao moduloDao;
-	private final IAuditoriaService auditoriaService;
+    private final IModuloDao moduloDao;
+    private final IAuditoriaService auditoriaService;
 
-	@Override
-	@Transactional(readOnly = true)
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarModulos() {
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarModulos() {
 
-		log.info("Consultando modulos");
+        log.info("Consultando modulos");
 
-		List<Modulo> modulos = new ArrayList<>();
-		moduloDao.findAll().forEach(modulos::add);
+        List<Modulo> modulos = new ArrayList<>();
+        moduloDao.findAll().forEach(modulos::add);
 
-		return response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, modulos);
-	}
+        return response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, modulos);
+    }
 
-	@Override
-	@Transactional(readOnly = true)
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(Long id) {
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(Long id) {
 
-		validarId(id);
+        validarId(id);
 
-		return moduloDao.findById(id)
-				.map(modulo -> response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, List.of(modulo)))
-				.orElseGet(() -> response(HttpStatus.NOT_FOUND, MensajeUtil.REGISTRO_NO_ENCONTRADO, null));
-	}
+        return moduloDao.findById(id)
+                .map(modulo -> response(
+                        HttpStatus.OK,
+                        MensajeUtil.CONSULTA_EXITOSA,
+                        List.of(modulo)))
+                .orElseGet(() -> response(
+                        HttpStatus.NOT_FOUND,
+                        MensajeUtil.REGISTRO_NO_ENCONTRADO,
+                        null));
+    }
 
-	@Override
-	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> crear(Modulo modulo) {
+    @Override
+    @Transactional
+    public ResponseEntity<ApiResponse<Map<String, Object>>> crear(ModuloDto moduloDto) {
 
-		validarModulo(modulo);
+        validarModulo(moduloDto);
 
-		prepararModuloPadre(modulo);
+        Modulo modulo = convertirEntidad(moduloDto);
 
-		Modulo moduloGuardado = moduloDao.save(modulo);
+        prepararModuloPadre(modulo, moduloDto.moduloPadreId());
 
-		auditoriaService.registrar(
-				"CREATE",
-				ENTIDAD_MODULO,
-				moduloGuardado.getId(),
-				null,
-				moduloGuardado.toString());
+        Modulo moduloGuardado = moduloDao.save(modulo);
 
-		return response(HttpStatus.CREATED, MensajeUtil.REGISTRO_CREADO, List.of(moduloGuardado));
-	}
+        auditoriaService.registrar(
+                "CREATE",
+                ENTIDAD_MODULO,
+                moduloGuardado.getId(),
+                null,
+                moduloGuardado.toString());
 
-	@Override
-	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(Modulo modulo, Long id) {
+        return response(
+                HttpStatus.CREATED,
+                MensajeUtil.REGISTRO_CREADO,
+                List.of(moduloGuardado));
+    }
 
-		validarId(id);
-		validarModulo(modulo);
+    @Override
+    @Transactional
+    public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(
+            ModuloDto moduloDto,
+            Long id) {
 
-		Modulo moduloExistente = obtenerModulo(id);
+        validarId(id);
+        validarModulo(moduloDto);
 
-		String datosAnteriores = moduloExistente.toString();
+        Modulo moduloExistente = obtenerModulo(id);
 
-		actualizarModuloPadre(moduloExistente, modulo, id);
+        String datosAnteriores = moduloExistente.toString();
 
-		moduloExistente.setNombre(modulo.getNombre());
-		moduloExistente.setRuta(modulo.getRuta());
-		moduloExistente.setIcono(modulo.getIcono());
-		moduloExistente.setOrden(modulo.getOrden());
-		moduloExistente.setActivo(modulo.getActivo());
+        actualizarModuloPadre(
+                moduloExistente,
+                moduloDto.moduloPadreId(),
+                id);
 
-		Modulo moduloActualizado = moduloDao.save(moduloExistente);
+        moduloExistente.setNombre(moduloDto.nombre());
+        moduloExistente.setRuta(moduloDto.ruta());
+        moduloExistente.setIcono(moduloDto.icono());
+        moduloExistente.setOrden(moduloDto.orden());
+        moduloExistente.setActivo(
+                moduloDto.activo() != null
+                        ? moduloDto.activo()
+                        : true);
 
-		auditoriaService.registrar(
-				"UPDATE",
-				ENTIDAD_MODULO,
-				id,
-				datosAnteriores,
-				moduloActualizado.toString());
+        Modulo moduloActualizado = moduloDao.save(moduloExistente);
 
-		return response(HttpStatus.OK, MensajeUtil.REGISTRO_ACTUALIZADO, List.of(moduloActualizado));
-	}
+        auditoriaService.registrar(
+                "UPDATE",
+                ENTIDAD_MODULO,
+                id,
+                datosAnteriores,
+                moduloActualizado.toString());
 
-	@Override
-	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(Long id) {
+        return response(
+                HttpStatus.OK,
+                MensajeUtil.REGISTRO_ACTUALIZADO,
+                List.of(moduloActualizado));
+    }
 
-		validarId(id);
+    @Override
+    @Transactional
+    public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(Long id) {
 
-		Modulo modulo = obtenerModulo(id);
+        validarId(id);
 
-		String datosAnteriores = modulo.toString();
+        Modulo modulo = obtenerModulo(id);
 
-		modulo.setActivo(false);
+        String datosAnteriores = modulo.toString();
 
-		Modulo moduloActualizado = moduloDao.save(modulo);
+        modulo.setActivo(false);
 
-		auditoriaService.registrar(
-				"DEACTIVATE",
-				ENTIDAD_MODULO,
-				id,
-				datosAnteriores,
-				moduloActualizado.toString());
+        Modulo moduloActualizado = moduloDao.save(modulo);
 
-		return response(HttpStatus.OK, MensajeUtil.REGISTRO_ELIMINADO, null);
-	}
+        auditoriaService.registrar(
+                "DEACTIVATE",
+                ENTIDAD_MODULO,
+                id,
+                datosAnteriores,
+                moduloActualizado.toString());
 
-	private void prepararModuloPadre(Modulo modulo) {
+        return response(
+                HttpStatus.OK,
+                MensajeUtil.REGISTRO_ELIMINADO,
+                null);
+    }
 
-		if (modulo.getModuloPadre() == null) {
-			return;
-		}
+    private Modulo convertirEntidad(ModuloDto moduloDto) {
 
-		Long padreId = modulo.getModuloPadre().getId();
+        return Modulo.builder()
+                .nombre(moduloDto.nombre())
+                .ruta(moduloDto.ruta())
+                .icono(moduloDto.icono())
+                .orden(moduloDto.orden())
+                .activo(
+                        moduloDto.activo() != null
+                                ? moduloDto.activo()
+                                : true)
+                .build();
+    }
 
-		validarIdPadre(padreId);
+    private void prepararModuloPadre(
+            Modulo modulo,
+            Long moduloPadreId) {
 
-		Modulo moduloPadre = obtenerModulo(padreId);
+        if (moduloPadreId == null) {
+            modulo.setModuloPadre(null);
+            return;
+        }
 
-		modulo.setModuloPadre(moduloPadre);
-	}
+        validarIdPadre(moduloPadreId);
 
-	private void actualizarModuloPadre(Modulo moduloExistente, Modulo modulo, Long id) {
+        Modulo moduloPadre = obtenerModulo(moduloPadreId);
 
-		if (modulo.getModuloPadre() == null) {
-			moduloExistente.setModuloPadre(null);
-			return;
-		}
+        modulo.setModuloPadre(moduloPadre);
+    }
 
-		Long padreId = modulo.getModuloPadre().getId();
+    private void actualizarModuloPadre(
+            Modulo moduloExistente,
+            Long moduloPadreId,
+            Long id) {
 
-		validarIdPadre(padreId);
+        if (moduloPadreId == null) {
+            moduloExistente.setModuloPadre(null);
+            return;
+        }
 
-		if (padreId.equals(id)) {
-			throw new IllegalArgumentException("Un modulo no puede ser padre de si mismo");
-		}
+        validarIdPadre(moduloPadreId);
 
-		moduloExistente.setModuloPadre(obtenerModulo(padreId));
-	}
+        if (moduloPadreId.equals(id)) {
+            throw new IllegalArgumentException(
+                    "Un modulo no puede ser padre de si mismo");
+        }
 
-	private Modulo obtenerModulo(Long id) {
+        moduloExistente.setModuloPadre(
+                obtenerModulo(moduloPadreId));
+    }
 
-		return moduloDao.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException(MensajeUtil.REGISTRO_NO_ENCONTRADO));
-	}
+    private Modulo obtenerModulo(Long id) {
 
-	private void validarId(Long id) {
+        return moduloDao.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        MensajeUtil.REGISTRO_NO_ENCONTRADO));
+    }
 
-		if (id == null || id <= 0) {
-			throw new IllegalArgumentException("El id del modulo es obligatorio");
-		}
-	}
+    private void validarId(Long id) {
 
-	private void validarIdPadre(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException(
+                    "El id del modulo es obligatorio");
+        }
+    }
 
-		if (id == null || id <= 0) {
-			throw new IllegalArgumentException("El id del modulo padre es obligatorio");
-		}
-	}
+    private void validarIdPadre(Long id) {
 
-	private void validarModulo(Modulo modulo) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException(
+                    "El id del modulo padre es obligatorio");
+        }
+    }
 
-		if (modulo == null) {
-			throw new IllegalArgumentException("Los datos del modulo son obligatorios");
-		}
+    private void validarModulo(ModuloDto moduloDto) {
 
-		if (modulo.getNombre() == null || modulo.getNombre().isBlank()) {
-			throw new IllegalArgumentException("El nombre del modulo es obligatorio");
-		}
+        if (moduloDto == null) {
+            throw new IllegalArgumentException(
+                    "Los datos del modulo son obligatorios");
+        }
 
-		if (modulo.getOrden() == null || modulo.getOrden() < 0) {
-			throw new IllegalArgumentException("El orden del modulo es obligatorio");
-		}
+        if (moduloDto.nombre() == null
+                || moduloDto.nombre().isBlank()) {
+            throw new IllegalArgumentException(
+                    "El nombre del modulo es obligatorio");
+        }
 
-		if (modulo.getActivo() == null) {
-			modulo.setActivo(true);
-		}
-	}
+        if (moduloDto.orden() == null
+                || moduloDto.orden() < 0) {
+            throw new IllegalArgumentException(
+                    "El orden del modulo es obligatorio");
+        }
+    }
 
-	private ResponseEntity<ApiResponse<Map<String, Object>>> response(
-			HttpStatus status,
-			String mensaje,
-			List<Modulo> modulos) {
+    private ResponseEntity<ApiResponse<Map<String, Object>>> response(
+            HttpStatus status,
+            String mensaje,
+            List<Modulo> modulos) {
 
-		return ResponseEntity.status(status).body(crearResponse(status, mensaje, modulos));
-	}
+        return ResponseEntity
+                .status(status)
+                .body(crearResponse(status, mensaje, modulos));
+    }
 
-	private ApiResponse<Map<String, Object>> crearResponse(
-			HttpStatus status,
-			String mensaje,
-			List<Modulo> modulos) {
+    private ApiResponse<Map<String, Object>> crearResponse(
+            HttpStatus status,
+            String mensaje,
+            List<Modulo> modulos) {
 
-		MetadataResponse metadata = new MetadataResponse(
-				status.is2xxSuccessful() ? "SUCCESS" : "ERROR",
-				String.valueOf(status.value()),
-				mensaje);
+        MetadataResponse metadata = new MetadataResponse(
+                status.is2xxSuccessful()
+                        ? "SUCCESS"
+                        : "ERROR",
+                String.valueOf(status.value()),
+                mensaje);
 
-		Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> data = new LinkedHashMap<>();
 
-		if (modulos != null) {
-			data.put("modulos", modulos);
-		}
+        if (modulos != null) {
+            data.put("modulos", modulos);
+        }
 
-		return new ApiResponse<>(metadata, data);
-	}
+        return new ApiResponse<>(metadata, data);
+    }
 }

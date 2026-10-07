@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import mx.com.gs.demogs.backend.core.model.Modulo;
+import mx.com.gs.demogs.backend.core.dto.ModuloDto;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.service.IModuloService;
 
@@ -22,40 +22,39 @@ import mx.com.gs.demogs.backend.core.service.IModuloService;
 @RequiredArgsConstructor
 public class ModuloController {
 
-	private final IModuloService moduloService;
+    private final IModuloService moduloService;
 
-	@GetMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarModulos() {
+    @GetMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarModulos() {
+        return moduloService.buscarModulos();
+    }
 
-		return moduloService.buscarModulos();
-	}
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(
+            @PathVariable Long id) {
 
-	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(
-			@PathVariable Long id) {
+        return moduloService.buscarPorId(id);
+    }
 
-		return moduloService.buscarPorId(id);
-	}
+    @PostMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> crear(
+            @RequestBody ModuloDto moduloDto) {
 
-	@PostMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> crear(
-			@RequestBody Modulo modulo) {
+        return moduloService.crear(moduloDto);
+    }
 
-		return moduloService.crear(modulo);
-	}
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(
+            @PathVariable Long id,
+            @RequestBody ModuloDto moduloDto) {
 
-	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(
-			@PathVariable Long id,
-			@RequestBody Modulo modulo) {
+        return moduloService.actualizar(moduloDto, id);
+    }
 
-		return moduloService.actualizar(modulo, id);
-	}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(
+            @PathVariable Long id) {
 
-	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(
-			@PathVariable Long id) {
-
-		return moduloService.eliminar(id);
-	}
+        return moduloService.eliminar(id);
+    }
 }
