@@ -19,96 +19,63 @@ import mx.com.gs.demogs.backend.core.model.Usuario;
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey;
-    private final long expiration;
+	private final SecretKey secretKey;
+	private final long expiration;
 
-    public JwtService(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration}") long expiration) {
+	public JwtService(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expiration) {
 
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expiration = expiration;
-    }
+		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+		this.expiration = expiration;
+	}
 
-    public String generateToken(
-            UserDetails userDetails,
-            Usuario usuario) {
+	public String generateToken(UserDetails userDetails, Usuario usuario) {
 
-        Map<String, Object> claims = new HashMap<>();
+		Map<String, Object> claims = new HashMap<>();
 
-        claims.put("id", usuario.getId());
-        claims.put("numeroEmpleado", usuario.getNumeroEmpleado());
-        claims.put("correo", usuario.getCorreo());
-        claims.put("activo", usuario.getActivo());
+		claims.put("id", usuario.getId());
+		claims.put("numeroEmpleado", usuario.getNumeroEmpleado());
+		claims.put("correo", usuario.getCorreo());
+		claims.put("activo", usuario.getActivo());
 
-        claims.put(
-                "roles",
-                userDetails.getAuthorities()
-                        .stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toList());
+		claims.put("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
 
-        Instant ahora = Instant.now();
-        Instant expiracion = ahora.plusMillis(expiration);
+		Instant ahora = Instant.now();
+		Instant expiracion = ahora.plusMillis(expiration);
 
-        return Jwts.builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .issuedAt(Date.from(ahora))
-                .expiration(Date.from(expiracion))
-                .signWith(secretKey)
-                .compact();
-    }
+		return Jwts.builder().claims(claims).subject(userDetails.getUsername()).issuedAt(Date.from(ahora))
+				.expiration(Date.from(expiracion)).signWith(secretKey).compact();
+	}
 
-    public String extractUsername(String token) {
+	public String extractUsername(String token) {
 
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
+		return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getSubject();
+	}
 
-    public boolean validateToken(
-            String token,
-            UserDetails userDetails) {
+	public boolean validateToken(String token, UserDetails userDetails) {
 
-        String username = extractUsername(token);
+		String username = extractUsername(token);
 
-        return username.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
-    }
+		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+	}
 
-    private boolean isTokenExpired(String token) {
+	private boolean isTokenExpired(String token) {
 
-        Date expirationDate = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
+		Date expirationDate = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload()
+				.getExpiration();
 
-        return expirationDate.toInstant()
-                .isBefore(Instant.now());
-    }
+		return expirationDate.toInstant().isBefore(Instant.now());
+	}
 
-    public long getExpirationInSeconds() {
+	public long getExpirationInSeconds() {
 
-        return expiration / 1000;
-    }
+		return expiration / 1000;
+	}
 
-    public Long extractUsuarioId(String token) {
+	public Long extractUsuarioId(String token) {
 
-        Number id = (Number) Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("id");
+		Number id = (Number) Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload()
+				.get("id");
 
-        return id != null
-                ? id.longValue()
-                : null;
-    }
+		return id != null ? id.longValue() : null;
+	}
 }
