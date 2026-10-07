@@ -54,8 +54,8 @@ pipeline {
                     withSonarQubeEnv('SonarQube') {
                         sh '''
                             docker run --rm \
-                              -v jenkins_home:/jenkins_home \
-                              -w /jenkins_home/workspace/CoreGS-Pipeline \
+                              -v jenkins_home:/var/jenkins_home \
+                              -w /var/jenkins_home/workspace/CoreGS-Pipeline \
                               --network devops-net \
                               -e SPRING_DATASOURCE_URL="jdbc:mysql://docker-mysql:3306/coregs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
                               -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
@@ -89,7 +89,7 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        docker build -t coregs:latest .
+                        docker build -t coregs:latest
 
                         docker rm -f coregs || true
 
@@ -107,4 +107,3 @@ pipeline {
         }
     }
 }
-
