@@ -1,4 +1,3 @@
-
 package mx.com.gs.demogs.backend.core.service;
 
 import java.time.LocalDateTime;
@@ -15,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mx.com.gs.demogs.backend.core.dao.IActivacionDispositivoDao;
 import mx.com.gs.demogs.backend.core.dao.IDispositivoDao;
+import mx.com.gs.demogs.backend.core.dao.IUsuarioDao;
+import mx.com.gs.demogs.backend.core.dto.DispositivoDto;
 import mx.com.gs.demogs.backend.core.model.Dispositivo;
+import mx.com.gs.demogs.backend.core.model.Usuario;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.response.MetadataResponse;
 import mx.com.gs.demogs.backend.exception.ResourceNotFoundException;
@@ -28,10 +30,12 @@ public class DispositivoServiceImpl implements IDispositivoService {
 
 	private final IDispositivoDao dispositivoDao;
 	private final IActivacionDispositivoDao activacionDispositivoDao;
+	private final IUsuarioDao usuarioDao;
 
 	@Override
 	@Transactional(readOnly = true)
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(Long usuarioId, String deviceId) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuarioYDeviceId(Long usuarioId,
+			String deviceId) {
 
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
@@ -53,24 +57,31 @@ public class DispositivoServiceImpl implements IDispositivoService {
 
 	@Override
 	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(Dispositivo dispositivo) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(DispositivoDto dispositivoDto) {
 
-		validarDispositivo(dispositivo);
+		validarDispositivo(dispositivoDto);
 
 		Dispositivo existente = dispositivoDao
-				.findByUsuarioIdAndDeviceId(dispositivo.getUsuario().getId(), dispositivo.getDeviceId()).orElse(null);
+				.findByUsuarioIdAndDeviceId(dispositivoDto.usuarioId(), dispositivoDto.deviceId())
+				.orElse(null);
 
 		if (existente != null) {
 			throw new IllegalArgumentException("El dispositivo ya se encuentra registrado");
 		}
 
-		if (dispositivo.getActivo() == null) {
-			dispositivo.setActivo(true);
-		}
+		Usuario usuario = usuarioDao.findById(dispositivoDto.usuarioId())
+				.orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-		if (dispositivo.getFechaActivacion() == null) {
-			dispositivo.setFechaActivacion(LocalDateTime.now());
-		}
+		Dispositivo dispositivo = new Dispositivo();
+
+		dispositivo.setUsuario(usuario);
+		dispositivo.setDeviceId(dispositivoDto.deviceId());
+		dispositivo.setDeviceFingerprint(dispositivoDto.deviceFingerprint());
+		dispositivo.setTipoDispositivo(dispositivoDto.tipoDispositivo());
+		dispositivo.setSistemaOperativo(dispositivoDto.sistemaOperativo());
+		dispositivo.setNavegador(dispositivoDto.navegador());
+		dispositivo.setActivo(true);
+		dispositivo.setFechaActivacion(LocalDateTime.now());
 
 		Dispositivo dispositivoGuardado = dispositivoDao.save(dispositivo);
 
@@ -79,7 +90,8 @@ public class DispositivoServiceImpl implements IDispositivoService {
 
 	@Override
 	@Transactional
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(Long usuarioId, String deviceId) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizarUltimoAcceso(Long usuarioId,
+			String deviceId) {
 
 		validarUsuarioId(usuarioId);
 		validarDeviceId(deviceId);
@@ -117,13 +129,16 @@ public class DispositivoServiceImpl implements IDispositivoService {
 			return false;
 		}
 
-		Dispositivo dispositivo = dispositivoDao.findByUsuarioIdAndDeviceId(usuarioId, deviceId).orElse(null);
+		Dispositivo dispositivo = dispositivoDao
+				.findByUsuarioIdAndDeviceId(usuarioId, deviceId)
+				.orElse(null);
 
 		if (dispositivo == null) {
 			return false;
 		}
 
-		if (dispositivo.getDeviceFingerprint() == null || dispositivo.getDeviceFingerprint().isBlank()) {
+		if (dispositivo.getDeviceFingerprint() == null
+				|| dispositivo.getDeviceFingerprint().isBlank()) {
 			return false;
 		}
 
@@ -150,47 +165,53 @@ public class DispositivoServiceImpl implements IDispositivoService {
 		}
 	}
 
-	private void validarDispositivo(Dispositivo dispositivo) {
+	private void validarDispositivo(DispositivoDto dispositivoDto) {
 
-		if (dispositivo == null) {
+		if (dispositivoDto == null) {
 			throw new IllegalArgumentException("Los datos del dispositivo son obligatorios");
 		}
 
-		if (dispositivo.getUsuario() == null || dispositivo.getUsuario().getId() == null) {
-			throw new IllegalArgumentException("El usuario es obligatorio");
-		}
+		validarUsuarioId(dispositivoDto.usuarioId());
+		validarDeviceId(dispositivoDto.deviceId());
 
-		validarUsuarioId(dispositivo.getUsuario().getId());
-		validarDeviceId(dispositivo.getDeviceId());
-
-		if (dispositivo.getDeviceFingerprint() == null || dispositivo.getDeviceFingerprint().isBlank()) {
+		if (dispositivoDto.deviceFingerprint() == null
+				|| dispositivoDto.deviceFingerprint().isBlank()) {
 			throw new IllegalArgumentException("La huella del dispositivo es obligatoria");
 		}
 
-		if (dispositivo.getTipoDispositivo() == null || dispositivo.getTipoDispositivo().isBlank()) {
+		if (dispositivoDto.tipoDispositivo() == null
+				|| dispositivoDto.tipoDispositivo().isBlank()) {
 			throw new IllegalArgumentException("El tipo de dispositivo es obligatorio");
 		}
 
-		if (dispositivo.getSistemaOperativo() == null || dispositivo.getSistemaOperativo().isBlank()) {
+		if (dispositivoDto.sistemaOperativo() == null
+				|| dispositivoDto.sistemaOperativo().isBlank()) {
 			throw new IllegalArgumentException("El sistema operativo es obligatorio");
 		}
 
-		if (dispositivo.getNavegador() == null || dispositivo.getNavegador().isBlank()) {
+		if (dispositivoDto.navegador() == null
+				|| dispositivoDto.navegador().isBlank()) {
 			throw new IllegalArgumentException("El navegador es obligatorio");
 		}
 	}
 
-	private ResponseEntity<ApiResponse<Map<String, Object>>> response(HttpStatus status, String mensaje,
+	private ResponseEntity<ApiResponse<Map<String, Object>>> response(
+			HttpStatus status,
+			String mensaje,
 			List<Dispositivo> dispositivos) {
 
 		return ResponseEntity.status(status).body(crearResponse(status, mensaje, dispositivos));
 	}
 
-	private ApiResponse<Map<String, Object>> crearResponse(HttpStatus status, String mensaje,
+	private ApiResponse<Map<String, Object>> crearResponse(
+			HttpStatus status,
+			String mensaje,
 			List<Dispositivo> dispositivos) {
 
-		MetadataResponse metadata = new MetadataResponse(status.is2xxSuccessful() ? "SUCCESS" : "ERROR",
-				String.valueOf(status.value()), mensaje);
+		MetadataResponse metadata = new MetadataResponse(
+				status.is2xxSuccessful() ? "SUCCESS" : "ERROR",
+				String.valueOf(status.value()),
+				mensaje);
 
 		Map<String, Object> data = new LinkedHashMap<>();
 
@@ -204,9 +225,11 @@ public class DispositivoServiceImpl implements IDispositivoService {
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorUsuario(Long usuarioId) {
+
 		validarUsuarioId(usuarioId);
 
-		List<Dispositivo> dispositivos = dispositivoDao.findByUsuarioIdOrderByUltimoAccesoDesc(usuarioId);
+		List<Dispositivo> dispositivos = dispositivoDao
+				.findByUsuarioIdOrderByUltimoAccesoDesc(usuarioId);
 
 		return response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, dispositivos);
 	}
@@ -214,21 +237,21 @@ public class DispositivoServiceImpl implements IDispositivoService {
 	@Override
 	@Transactional
 	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminarDispositivo(
-	        Long usuarioId, String deviceId) {
+			Long usuarioId,
+			String deviceId) {
 
-	    validarUsuarioId(usuarioId);
-	    validarDeviceId(deviceId);
+		validarUsuarioId(usuarioId);
+		validarDeviceId(deviceId);
 
-	    Dispositivo dispositivo = obtenerDispositivo(usuarioId, deviceId);
+		Dispositivo dispositivo = obtenerDispositivo(usuarioId, deviceId);
 
-	    activacionDispositivoDao.deleteByDispositivoId(dispositivo.getId());
+		activacionDispositivoDao.deleteByDispositivoId(dispositivo.getId());
 
-	    dispositivoDao.delete(dispositivo);
+		dispositivoDao.delete(dispositivo);
 
-	    return response(
-	            HttpStatus.OK,
-	            "Dispositivo eliminado correctamente",
-	            List.of(dispositivo)
-	    );
+		return response(
+				HttpStatus.OK,
+				"Dispositivo eliminado correctamente",
+				List.of(dispositivo));
 	}
 }

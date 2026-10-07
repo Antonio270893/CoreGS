@@ -1,4 +1,4 @@
-package mx.com.gs.demogs.backend.dto;
+package mx.com.gs.demogs.backend.core.dto;
 
 import java.util.List;
 

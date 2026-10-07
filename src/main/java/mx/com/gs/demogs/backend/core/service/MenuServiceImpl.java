@@ -15,11 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import mx.com.gs.demogs.backend.core.dao.IModuloDao;
 import mx.com.gs.demogs.backend.core.dao.IRolModuloDao;
 import mx.com.gs.demogs.backend.core.dao.IUsuarioRolDao;
+import mx.com.gs.demogs.backend.core.dto.MenuDto;
 import mx.com.gs.demogs.backend.core.model.Modulo;
 import mx.com.gs.demogs.backend.core.model.RolModulo;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.response.MetadataResponse;
-import mx.com.gs.demogs.backend.dto.MenuDto;
 import mx.com.gs.demogs.backend.util.MensajeUtil;
 
 @Service

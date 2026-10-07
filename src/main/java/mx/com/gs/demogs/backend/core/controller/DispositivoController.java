@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import mx.com.gs.demogs.backend.core.model.Dispositivo;
+import mx.com.gs.demogs.backend.core.dto.DispositivoDto;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.service.IDispositivoService;
 
@@ -45,11 +45,11 @@ public class DispositivoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(@RequestBody Dispositivo dispositivo) {
+	public ResponseEntity<ApiResponse<Map<String, Object>>> registrar(@RequestBody DispositivoDto dispositivoDto) {
 
-		log.info("Registrando dispositivo para usuario: {}", dispositivo.getUsuario().getId());
+		log.info("Registrando dispositivo para usuario: {}", dispositivoDto.usuarioId());
 
-		return dispositivoService.registrar(dispositivo);
+		return dispositivoService.registrar(dispositivoDto);
 	}
 
 	@PutMapping("/{usuarioId}/{deviceId}/acceso")
