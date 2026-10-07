@@ -37,5 +37,32 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'coregs-db',
+                        usernameVariable: 'DB_USER',
+                        passwordVariable: 'DB_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        docker build -t coregs:latest .
+
+                        docker rm -f coregs || true
+
+                        docker run -d \
+                          --name coregs \
+                          --network devops-net \
+                          -p 7070:8080 \
+                          -e SPRING_DATASOURCE_URL="jdbc:mysql://docker-mysql:3306/coregs?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
+                          -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
+                          -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
+                          coregs:latest
+                    '''
+                }
+            }
+        }
     }
 }

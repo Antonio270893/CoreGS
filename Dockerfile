@@ -1,9 +1,9 @@
-FROM eclipse-temurin:23-jdk
+FROM eclipse-temurin:23-jre
 
 WORKDIR /app
 
-COPY target/CoreGS-0.0.1-SNAPSHOT.jar app.jar
+COPY target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 7070
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
