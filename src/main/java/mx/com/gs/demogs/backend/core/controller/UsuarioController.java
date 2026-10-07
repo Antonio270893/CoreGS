@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import mx.com.gs.demogs.backend.core.model.Usuario;
+import mx.com.gs.demogs.backend.core.dto.UsuarioDto;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 import mx.com.gs.demogs.backend.core.service.IUsuarioService;
 
@@ -22,43 +22,47 @@ import mx.com.gs.demogs.backend.core.service.IUsuarioService;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-	private final IUsuarioService usuarioService;
+    private final IUsuarioService usuarioService;
 
-	@GetMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarUsuario() {
+    @GetMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarUsuario() {
 
-		return usuarioService.buscarUsuario();
-	}
+        return usuarioService.buscarUsuario();
+    }
 
-	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(
+            @PathVariable Long id) {
 
-		return usuarioService.buscarPorId(id);
-	}
+        return usuarioService.buscarPorId(id);
+    }
 
-	@GetMapping("/empleado/{numeroEmpleado}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> obtenerPorNumeroEmpleado(
-			@PathVariable Long numeroEmpleado) {
+    @GetMapping("/empleado/{numeroEmpleado}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> obtenerPorNumeroEmpleado(
+            @PathVariable Long numeroEmpleado) {
 
-		return usuarioService.obtenerPorNumeroEmpleado(numeroEmpleado);
-	}
+        return usuarioService.obtenerPorNumeroEmpleado(numeroEmpleado);
+    }
 
-	@PostMapping
-	public ResponseEntity<ApiResponse<Map<String, Object>>> crear(@RequestBody Usuario usuario) {
+    @PostMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> crear(
+            @RequestBody UsuarioDto usuarioDto) {
 
-		return usuarioService.crear(usuario);
-	}
+        return usuarioService.crear(usuarioDto);
+    }
 
-	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(@PathVariable Long id,
-			@RequestBody Usuario usuario) {
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(
+            @PathVariable Long id,
+            @RequestBody UsuarioDto usuarioDto) {
 
-		return usuarioService.actualizar(usuario, id);
-	}
+        return usuarioService.actualizar(usuarioDto, id);
+    }
 
-	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(
+            @PathVariable Long id) {
 
-		return usuarioService.eliminar(id);
-	}
+        return usuarioService.eliminar(id);
+    }
 }

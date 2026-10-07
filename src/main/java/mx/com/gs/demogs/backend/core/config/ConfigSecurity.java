@@ -26,6 +26,22 @@ import mx.com.gs.demogs.backend.core.filter.JwtReqFilter;
 @RequiredArgsConstructor
 public class ConfigSecurity {
 
+    private static final String RESPUESTA_NO_AUTENTICADO = """
+            {
+                "status": 401,
+                "error": "Unauthorized",
+                "message": "No autenticado"
+            }
+            """;
+
+    private static final String RESPUESTA_SIN_PERMISOS = """
+            {
+                "status": 403,
+                "error": "Forbidden",
+                "message": "No tiene permisos para realizar esta operación"
+            }
+            """;
+
     @Bean
     public UserDetailsService userDetailsService(DataSource dataSource) {
 
@@ -67,7 +83,8 @@ public class ConfigSecurity {
             return configuration.getAuthenticationManager();
         } catch (Exception e) {
             throw new IllegalStateException(
-                    "No se pudo configurar el AuthenticationManager", e);
+                    "No se pudo configurar el AuthenticationManager",
+                    e);
         }
     }
 
@@ -82,45 +99,51 @@ public class ConfigSecurity {
                     .cors(Customizer.withDefaults())
                     .csrf(csrf -> csrf.disable())
                     .sessionManagement(session -> session
-                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                            .sessionCreationPolicy(
+                                    SessionCreationPolicy.STATELESS))
                     .exceptionHandling(exceptions -> exceptions
                             .authenticationEntryPoint((request, response, exception) -> {
-                                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                                response.setStatus(
+                                        HttpStatus.UNAUTHORIZED.value());
                                 response.setContentType("application/json");
                                 response.setCharacterEncoding("UTF-8");
-                                response.getWriter().write("""
-                                            {
-                                                "status": 401,
-                                                "error": "Unauthorized",
-                                                "message": "No autenticado"
-                                            }
-                                        """);
+                                response.getWriter().write(
+                                        RESPUESTA_NO_AUTENTICADO);
                             })
                             .accessDeniedHandler((request, response, exception) -> {
-                                response.setStatus(HttpStatus.FORBIDDEN.value());
+                                response.setStatus(
+                                        HttpStatus.FORBIDDEN.value());
                                 response.setContentType("application/json");
                                 response.setCharacterEncoding("UTF-8");
-                                response.getWriter().write("""
-                                            {
-                                                "status": 403,
-                                                "error": "Forbidden",
-                                                "message": "No tiene permisos para realizar esta operación"
-                                            }
-                                        """);
+                                response.getWriter().write(
+                                        RESPUESTA_SIN_PERMISOS);
                             }))
                     .authorizeHttpRequests(configure -> configure
-                            .requestMatchers("/v1/core/authenticate").permitAll()
-                            .requestMatchers("/v1/core/auth/refresh").permitAll()
-                            .requestMatchers("/v1/core/auth/logout").permitAll()
-                            .requestMatchers("/v1/core/correo/enviar").permitAll()
-                            .requestMatchers("/v1/core/dispositivo/activacion/**").permitAll()
-                            .requestMatchers("/v1/core/dispositivo/**").authenticated()
+                            .requestMatchers(
+                                    "/v1/core/authenticate")
+                            .permitAll()
+                            .requestMatchers(
+                                    "/v1/core/auth/refresh")
+                            .permitAll()
+                            .requestMatchers(
+                                    "/v1/core/auth/logout")
+                            .permitAll()
+                            .requestMatchers(
+                                    "/v1/core/correo/enviar")
+                            .permitAll()
+                            .requestMatchers(
+                                    "/v1/core/dispositivo/activacion/**")
+                            .permitAll()
+                            .requestMatchers(
+                                    "/v1/core/dispositivo/**")
+                            .authenticated()
                             .requestMatchers(
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html")
                             .permitAll()
-                            .anyRequest().access(dbAuthorizationManager))
+                            .anyRequest()
+                            .access(dbAuthorizationManager))
                     .addFilterBefore(
                             jwtReqFilter,
                             UsernamePasswordAuthenticationFilter.class);
@@ -129,7 +152,8 @@ public class ConfigSecurity {
 
         } catch (Exception e) {
             throw new IllegalStateException(
-                    "No se pudo configurar la cadena de seguridad", e);
+                    "No se pudo configurar la cadena de seguridad",
+                    e);
         }
     }
 }

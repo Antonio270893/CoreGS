@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 
-import mx.com.gs.demogs.backend.core.model.Usuario;
+import mx.com.gs.demogs.backend.core.dto.UsuarioDto;
 import mx.com.gs.demogs.backend.core.response.ApiResponse;
 
 public interface IUsuarioService {
@@ -13,9 +13,9 @@ public interface IUsuarioService {
 
 	ResponseEntity<ApiResponse<Map<String, Object>>> buscarPorId(Long id);
 
-	ResponseEntity<ApiResponse<Map<String, Object>>> crear(Usuario usuario);
+	ResponseEntity<ApiResponse<Map<String, Object>>> crear(UsuarioDto usuarioDto);
 
-	ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(Usuario usuario, Long id);
+	ResponseEntity<ApiResponse<Map<String, Object>>> actualizar(UsuarioDto usuarioDto, Long id);
 
 	ResponseEntity<ApiResponse<Map<String, Object>>> eliminar(Long id);
 

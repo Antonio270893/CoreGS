@@ -39,7 +39,10 @@ public class ModuloServiceImpl implements IModuloService {
         List<Modulo> modulos = new ArrayList<>();
         moduloDao.findAll().forEach(modulos::add);
 
-        return response(HttpStatus.OK, MensajeUtil.CONSULTA_EXITOSA, modulos);
+        return response(
+                HttpStatus.OK,
+                MensajeUtil.CONSULTA_EXITOSA,
+                modulos);
     }
 
     @Override
@@ -61,13 +64,16 @@ public class ModuloServiceImpl implements IModuloService {
 
     @Override
     @Transactional
-    public ResponseEntity<ApiResponse<Map<String, Object>>> crear(ModuloDto moduloDto) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> crear(
+            ModuloDto moduloDto) {
 
         validarModulo(moduloDto);
 
         Modulo modulo = convertirEntidad(moduloDto);
 
-        prepararModuloPadre(modulo, moduloDto.moduloPadreId());
+        prepararModuloPadre(
+                modulo,
+                moduloDto.moduloPadreId());
 
         Modulo moduloGuardado = moduloDao.save(modulo);
 
@@ -106,10 +112,10 @@ public class ModuloServiceImpl implements IModuloService {
         moduloExistente.setRuta(moduloDto.ruta());
         moduloExistente.setIcono(moduloDto.icono());
         moduloExistente.setOrden(moduloDto.orden());
-        moduloExistente.setActivo(
-                moduloDto.activo() != null
-                        ? moduloDto.activo()
-                        : true);
+
+        if (moduloDto.activo() != null) {
+            moduloExistente.setActivo(moduloDto.activo());
+        }
 
         Modulo moduloActualizado = moduloDao.save(moduloExistente);
 
@@ -155,16 +161,17 @@ public class ModuloServiceImpl implements IModuloService {
 
     private Modulo convertirEntidad(ModuloDto moduloDto) {
 
-        return Modulo.builder()
+        Modulo.ModuloBuilder builder = Modulo.builder()
                 .nombre(moduloDto.nombre())
                 .ruta(moduloDto.ruta())
                 .icono(moduloDto.icono())
-                .orden(moduloDto.orden())
-                .activo(
-                        moduloDto.activo() != null
-                                ? moduloDto.activo()
-                                : true)
-                .build();
+                .orden(moduloDto.orden());
+
+        if (moduloDto.activo() != null) {
+            builder.activo(moduloDto.activo());
+        }
+
+        return builder.build();
     }
 
     private void prepararModuloPadre(
@@ -254,7 +261,10 @@ public class ModuloServiceImpl implements IModuloService {
 
         return ResponseEntity
                 .status(status)
-                .body(crearResponse(status, mensaje, modulos));
+                .body(crearResponse(
+                        status,
+                        mensaje,
+                        modulos));
     }
 
     private ApiResponse<Map<String, Object>> crearResponse(
