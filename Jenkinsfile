@@ -89,7 +89,7 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        docker build -t coregs:latest
+                        docker build -t coregs:latest .
 
                         docker rm -f coregs || true
 
