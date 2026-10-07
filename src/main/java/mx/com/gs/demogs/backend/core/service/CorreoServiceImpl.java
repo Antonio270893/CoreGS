@@ -22,8 +22,8 @@ import mx.com.gs.demogs.backend.core.request.CorreoRequest;
 @Slf4j
 public class CorreoServiceImpl implements ICorreoService {
 
-    private static final Pattern VARIABLE_PATTERN =
-            Pattern.compile("\\{\\{\\s*([^{}]++)\\s*\\}\\}");
+	private static final Pattern VARIABLE_PATTERN =
+			Pattern.compile("\\{\\{\\s*([\\w.]+)\\s*\\}\\}");
 
     private final JavaMailSender mailSender;
     private final IPlantillaCorreoDao plantillaCorreoDao;
